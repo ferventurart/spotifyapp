@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SpotifyApp - UNIVO 2020</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            <img src="img/banner-ico.png" width="30" height="30" alt=""> SpotiApp UNIVO
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+    
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a href="index.html" class="nav-link">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a href="buscar.html" class="nav-link">Buscar</a>
+                </li>
+    
+            </ul>
+    
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <div class="card-columns listado-canciones">
+           
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function(){
+
+            localStorage.removeItem("artistaSeleccionado");
+
+            var pedirToken = $.ajax({
+                type: "POST",
+                url: "https://accounts.spotify.com/api/token",
+                data: {grant_type : "client_credentials", client_id: "e4cb409418b14ff3ba21e58c900249af", client_secret:"68bcab40359744f8965e053d0b0cb401"},
+                dataType: "JSON"
+            });
+            pedirToken.done(function(data){
+                localStorage.setItem("validToken", data.access_token);
+            });
+            pedirToken.fail(function(data){
+               alert('Hubo un fallo al solicitar el token');
+            });
+
+            var pedirLanzamientos = $.ajax({
+                type: "GET",
+                headers: { 'Authorization': 'Bearer ' +  localStorage.getItem("validToken") },
+                url: "https://api.spotify.com/v1/browse/new-releases?limit=10",
+                dataType: "JSON"
+            });
+
+            pedirLanzamientos.done(function(data){
+                mostrarNuevosLanzamientos(data.albums.items);
+            });
+
+            pedirLanzamientos.fail(function(data){
+               alert('Hubo un fallo al extraer los lanzamientos');
+            });
+
+            function mostrarNuevosLanzamientos(canciones)
+            {
+                $.each(canciones, function (index, value) {
+                    var id = value.id;
+                    $('.listado-canciones').append(`
+                        <div class="card">
+                            <img src="${value.images[0].url}" class="card-img-top" alt="${value.name}">
+                            <div class="card-body" id="${id}">
+                                <h5 class="card-title">${value.name}</h5>`);
+                    $.each(value.artists, function (index, value) {
+                        $('#'+id).append(`
+                                <p class="card-text"> <span class="badge badge-pill badge-primary">${value.name}</span> </p>
+                            </div>
+                        </div>`);
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
